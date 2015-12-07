@@ -1,0 +1,27 @@
+{
+  "name": "Tetris-Api",
+  "version": "0.0.1",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "awesome"
+  ],
+  "author": "Christoffer Bo Petersen",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "standard": "^5.4.1"
+  },
+  "dependencies": {
+    "body-parser": "^1.14.1",
+    "cors": "~2.7.1",
+    "express": "~4.13.1",
+    "lodash": "~3.8.0",
+    "moment": "~2.10.2",
+    "mongojs": "^2.0.0",
+    "morgan": "~1.6.1"
+  }
+}
