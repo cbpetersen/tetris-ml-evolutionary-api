@@ -1,4 +1,4 @@
-# tetris-ml-evolutionary-api
+# Tetris Machine learning Api
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)  
 
 ### Machine learning api for distributed tetris agents
