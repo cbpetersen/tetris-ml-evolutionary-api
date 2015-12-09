@@ -1,0 +1,6 @@
+{
+  "newWeigtRandomDifference": 5,
+  "bestPerformingGamesCount": 15,
+  "minGamesToEvaluate": 200,
+  "timeBetweenEvolutionCalculations": 60000
+}
