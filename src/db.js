@@ -1,7 +1,7 @@
 var mongojs = require('mongojs')
 var db = mongojs('tetris', ['evaluations'])
 
-exports.getBestEvaluations = function (callback) {
+exports.getCurrentEvolution = function (callback) {
   db.evaluations.findOne({ active: true }, callback)
 }
 

@@ -17,7 +17,7 @@ exports.getSettings = function (callback) {
 }
 
 exports.getBestEvaluations = function (callback) {
-  db.getBestEvaluations(function (err, data) {
+  db.getCurrentEvolution(function (err, data) {
     if (err) {
       console.error(err)
       return
@@ -64,7 +64,7 @@ exports.getBestEvaluations = function (callback) {
 }
 
 setInterval(function () {
-  db.getBestEvaluations(function (err, data) {
+  db.getCurrentEvolution(function (err, data) {
     if (err) {
       console.error(err)
       return
