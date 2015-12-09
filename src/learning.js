@@ -5,11 +5,11 @@ exports.getSettings = function (callback) {
   db.getSettings(function (err, data) {
     data = data[0]
 
-    data.linesCleared += _.random(-2, 2)
-    data.sideEdges += _.random(-2, 2)
-    data.topEdges += _.random(-2, 2)
-    data.blockedSpaces += _.random(-2, 2)
-    data.totalHeight += _.random(-2, 2)
+    data.linesCleared += _.random(-5, 5)
+    data.sideEdges += _.random(-5, 5)
+    data.topEdges += _.random(-5, 5)
+    data.blockedSpaces += _.random(-5, 5)
+    data.totalHeight += _.random(-5, 5)
 
     callback(err, data)
   })
