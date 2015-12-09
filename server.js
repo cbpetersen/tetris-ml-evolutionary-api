@@ -1,8 +1,8 @@
 var express = require('express')
 var app = express()
 var cors = require('cors')
-var db = require('./db')
-var learning = require('./learning')
+var db = require('./src/db')
+var learning = require('./src/learning')
 var bodyParser = require('body-parser')
 
 require('http').createServer(app).listen(3000)
