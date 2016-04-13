@@ -27,23 +27,21 @@ exports.getBestEvaluations = function (algorithmId, callback) {
       callback(err)
     }
 
-    var bestPerformingGames = _.takeRight(_.sortBy(data.gamesPlayed, 'Fitness'), settings.bestPerformingGamesCount)
-    var evolutionFitness = Math.ceil(_.sum(bestPerformingGames, 'Fitness') / bestPerformingGames.length)
-    var overallAvgFitness = Math.ceil(_.sum(data.gamesPlayed, 'Fitness') / data.gamesPlayed.length)
+    var bestPerformingGames = _.takeRight(_.sortBy(data.gamesPlayed, 'fitness'), settings.bestPerformingGamesCount)
+    var evolutionFitness = Math.ceil(_.sumBy(bestPerformingGames, 'fitness') / bestPerformingGames.length)
+    var overallAvgFitness = Math.ceil(_.sumBy(data.gamesPlayed, 'fitness') / data.gamesPlayed.length)
 
-    var aboveThreshold = _.every(_.map(bestPerformingGames, 'Fitness'), function (n) {
+    var aboveThreshold = _.every(_.map(bestPerformingGames, 'fitness'), function (n) {
       return n > data.evolutionFitness
     })
 
     if (!aboveThreshold) {
       console.log('avg overallAvgFitness: ' + overallAvgFitness + ' | old avg overallAvgFitness: ' + data.overallAvgFitness)
-
-      console.log('Top: ' + _.pluck(bestPerformingGames, 'fitness'))
+      console.log('Top: ' + _.map(bestPerformingGames, 'fitness'))
       console.log('Top avg evolutionFitness: ' + evolutionFitness + ' | old avg evolutionFitness: ' + data.evolutionFitness)
       return
     }
 
-    var weights
     if (bestPerformingGames.length === 0) {
       callback(undefined, {
         weights: data.weights,
@@ -59,17 +57,21 @@ exports.getBestEvaluations = function (algorithmId, callback) {
       return
     }
 
-    _.each(bestPerformingGames[0].weights, function (value, key) {
-      weights[key] = Math.ceil(_.sum(bestPerformingGames, key) / bestPerformingGames.length)
+    var weights = _.map(bestPerformingGames, 'weights')
+    var avgWeights = {}
+
+    _.each(_.first(weights), function (value, key) {
+      avgWeights[key] = Math.ceil(_.sumBy(weights, key) / weights.length)
     })
 
     var next = {
-      weights: weights,
+      weights: avgWeights,
+      name: data.name,
       evolutionNumber: data.evolutionNumber,
       gamesPlayed: [],
       active: true,
       overallAvgFitness: overallAvgFitness,
-      bestFitness: _.max(bestPerformingGames, 'fitness').fitness,
+      bestFitness: _.maxBy(bestPerformingGames, 'fitness').fitness,
       evolutionFitness: evolutionFitness,
       algorithmId: data.algorithmId
     }

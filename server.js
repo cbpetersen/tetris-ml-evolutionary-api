@@ -66,14 +66,14 @@ function endpoints (server) {
   server.post('/evolutions/:id/result', function (req, res) {
     var id = req.params.id
     var gameData = req.body
-    console.log(gameData.Fitness)
+
     db.saveGameStatus(id, gameData, function (error, data) {
       if (error) {
         throw new Error(error)
       }
-
-      res.json(data)
     })
+
+    res.sendStatus(200)
   })
 
   server.post('/evolutions', function (req, res) {
