@@ -19,7 +19,7 @@
     "body-parser": "^1.14.1",
     "cors": "~2.7.1",
     "express": "~4.13.1",
-    "lodash": "~3.8.0",
+    "lodash": "~4.10.0",
     "moment": "~2.10.2",
     "mongojs": "^2.0.0",
     "morgan": "~1.6.1"
