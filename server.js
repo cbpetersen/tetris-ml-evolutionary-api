@@ -33,8 +33,8 @@ function endpoints (server) {
     res.json({ ping: 'pong' })
   })
 
-  server.get('/evolution/settings', function (req, res) {
-    learning.getSettings(function (error, data) {
+  server.get('/evolutions/:id/settings', function (req, res) {
+    learning.getSettings(req.params.id, function (error, data) {
       if (error) {
         throw new Error(error)
       }
@@ -43,8 +43,8 @@ function endpoints (server) {
     })
   })
 
-  server.get('/evolution/best', function (req, res) {
-    learning.getBestEvaluations(function (error, data) {
+  server.get('/evolutions', function (req, res) {
+    db.getEvolutions(function (error, data) {
       if (error) {
         throw new Error(error)
       }
@@ -53,7 +53,17 @@ function endpoints (server) {
     })
   })
 
-  server.post('/evolution/:id/result', function (req, res) {
+  server.get('/evolutions/:id/best', function (req, res) {
+    learning.getBestEvaluations(req.params.id, function (error, data) {
+      if (error) {
+        throw new Error(error)
+      }
+
+      res.json(data)
+    })
+  })
+
+  server.post('/evolutions/:id/result', function (req, res) {
     var id = req.params.id
     var gameData = req.body
     console.log(gameData.Fitness)
@@ -66,8 +76,16 @@ function endpoints (server) {
     })
   })
 
-  server.post('/evolution', function (req, res) {
-    _.each(req.body, function (value, key) {
+  server.post('/evolutions', function (req, res) {
+    if (!req.body) {
+      throw new Error('payload missing')
+    }
+
+    if (!_.isString(req.body.name)) {
+      throw new Error('name is not a string')
+    }
+
+    _.each(req.body.weights, function (value, key) {
       if (!_.isInteger(value)) {
         throw new Error(key + ': is not an integer')
       }
