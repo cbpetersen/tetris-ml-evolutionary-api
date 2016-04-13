@@ -4,13 +4,17 @@ var _ = require('lodash')
 
 exports.getSettings = function (callback) {
   db.getSettings(function (err, data) {
-    data = data[0]
+    if (err) {
+      callback(err)
+    }
 
-    data.linesCleared += _.random(-settings.newWeigtRandomDifference, settings.newWeigtRandomDifference)
-    data.sideEdges += _.random(-settings.newWeigtRandomDifference, settings.newWeigtRandomDifference)
-    data.topEdges += _.random(-settings.newWeigtRandomDifference, settings.newWeigtRandomDifference)
-    data.blockedSpaces += _.random(-settings.newWeigtRandomDifference, settings.newWeigtRandomDifference)
-    data.totalHeight += _.random(-settings.newWeigtRandomDifference, settings.newWeigtRandomDifference)
+    if (_.isEmpty(data.weights)) {
+      callback(err, data)
+    }
+
+    _.forEach(data.weights, function (value, key) {
+      data.weights[key] += _.random(-settings.newWeigtRandomDifference, settings.newWeigtRandomDifference)
+    })
 
     callback(err, data)
   })
@@ -20,7 +24,7 @@ exports.getBestEvaluations = function (callback) {
   db.getCurrentEvolution(function (err, data) {
     if (err) {
       console.error(err)
-      return
+      callback(err)
     }
 
     var bestPerformingGames = _.takeRight(_.sortBy(data.gamesPlayed, 'Fitness'), settings.bestPerformingGamesCount)
@@ -40,24 +44,18 @@ exports.getBestEvaluations = function (callback) {
     }
 
     var next = {
-      linesCleared: 0,
-      sideEdges: 0,
-      topEdges: 0,
-      blockedSpaces: 0,
-      totalHeight: 0,
+      linesCleared: Math.ceil(_.sum(bestPerformingGames, 'AiSetting.linesCleared') / bestPerformingGames.length),
+      sideEdges: Math.ceil(_.sum(bestPerformingGames, 'AiSetting.sideEdges') / bestPerformingGames.length),
+      topEdges: Math.ceil(_.sum(bestPerformingGames, 'AiSetting.topEdges') / bestPerformingGames.length),
+      blockedSpaces: Math.ceil(_.sum(bestPerformingGames, 'AiSetting.blockedSpaces') / bestPerformingGames.length),
+      totalHeight: Math.ceil(_.sum(bestPerformingGames, 'AiSetting.totalHeight') / bestPerformingGames.length),
       evolutionNumber: data.evolutionNumber + 1,
       gamesPlayed: [],
       active: true,
       overallAvgFitness: overallAvgFitness,
-      bestFitness: _.max(bestPerformingGames, 'Fitness'),
+      bestFitness: _.max(bestPerformingGames, 'Fitness').Fitness,
       evolutionFitness: evolutionFitness
     }
-
-    next.linesCleared = Math.ceil(_.sum(bestPerformingGames, 'AiSetting.linesCleared') / bestPerformingGames.length)
-    next.sideEdges = Math.ceil(_.sum(bestPerformingGames, 'AiSetting.sideEdges') / bestPerformingGames.length)
-    next.topEdges = Math.ceil(_.sum(bestPerformingGames, 'AiSetting.topEdges') / bestPerformingGames.length)
-    next.blockedSpaces = Math.ceil(_.sum(bestPerformingGames, 'AiSetting.blockedSpaces') / bestPerformingGames.length)
-    next.totalHeight = Math.ceil(_.sum(bestPerformingGames, 'AiSetting.totalHeight') / bestPerformingGames.length)
 
     db.saveEvolution(next, callback)
   })
