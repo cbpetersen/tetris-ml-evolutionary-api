@@ -1,6 +1,7 @@
 var express = require('express')
 var app = express()
 var cors = require('cors')
+var _ = require('lodash')
 var db = require('./src/db')
 var learning = require('./src/learning')
 var bodyParser = require('body-parser')
@@ -15,7 +16,7 @@ var errorHandler = function (err, req, res, next) {
 app.use(cors())
 app.use(bodyParser.json())
 app.use('/public', express.static('public'))
-// app.use(require('morgan')('dev'))
+app.use(require('morgan')('dev'))
 
 endpoints(app)
 
@@ -57,6 +58,22 @@ function endpoints (server) {
     var gameData = req.body
     console.log(gameData.Fitness)
     db.saveGameStatus(id, gameData, function (error, data) {
+      if (error) {
+        throw new Error(error)
+      }
+
+      res.json(data)
+    })
+  })
+
+  server.post('/evolution', function (req, res) {
+    _.each(req.body, function (value, key) {
+      if (!_.isInteger(value)) {
+        throw new Error(key + ': is not an integer')
+      }
+    })
+
+    db.newEvolution(req.body, function (error, data) {
       if (error) {
         throw new Error(error)
       }
