@@ -10,7 +10,7 @@ exports.getEvolutions = function (callback) {
 }
 
 exports.getSettings = function (algorithmId, callback) {
-  db.evaluations.findOne({ active: true, algorithmId: mongojs.ObjectId(algorithmId) }, { gamesPlayed: 0 }, callback)
+  db.evaluations.findOne({ algorithmId: mongojs.ObjectId(algorithmId) }, { gamesPlayed: 0 }, callback)
 }
 
 exports.saveGameStatus = function (algorithmId, playStatus, callback) {

@@ -6,10 +6,17 @@ exports.getSettings = function (id, callback) {
   db.getSettings(id, function (err, data) {
     if (err) {
       callback(err)
+      return
+    }
+
+    if (!data) {
+      callback()
+      return
     }
 
     if (_.isEmpty(data.weights)) {
       callback(err, data)
+      return
     }
 
     _.forEach(data.weights, function (value, key) {

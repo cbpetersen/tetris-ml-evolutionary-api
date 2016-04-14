@@ -39,7 +39,11 @@ function endpoints (server) {
         throw new Error(error)
       }
 
-      res.json(data)
+      if (data) {
+        res.json(data)
+      }
+
+      res.sendStatus(404)
     })
   })
 
@@ -98,6 +102,10 @@ function endpoints (server) {
 
       res.json(data)
     })
+  })
+
+  app.get('*', function (req, res) {
+    res.sendStatus(404)
   })
 
   server.use(errorHandler)
