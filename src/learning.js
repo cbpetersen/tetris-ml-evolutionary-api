@@ -13,7 +13,7 @@ exports.getSettings = function (id, callback) {
     }
 
     _.forEach(data.weights, function (value, key) {
-      data.weights[key] += _.random(-settings.newWeigtRandomDifference, settings.newWeigtRandomDifference)
+      data.weights[key] += _.random(-settings.newWeigtRandomDifference, settings.newWeigtRandomDifference, true)
     })
 
     callback(err, data)

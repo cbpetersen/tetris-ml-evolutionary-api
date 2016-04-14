@@ -86,8 +86,8 @@ function endpoints (server) {
     }
 
     _.each(req.body.weights, function (value, key) {
-      if (!_.isInteger(value)) {
-        throw new Error(key + ': is not an integer')
+      if (!_.isNumber(value)) {
+        throw new Error(key + ': is not a number')
       }
     })
 
