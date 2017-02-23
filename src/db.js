@@ -1,5 +1,7 @@
 var mongojs = require('mongojs')
-var db = mongojs('tetris', ['evaluations'])
+var dbHost = process.env.DB ? process.env.DB + '/tetris' : 'tetris'
+
+var db = mongojs(dbHost, ['evaluations'])
 
 exports.getCurrentEvolution = function (algorithmId, callback) {
   db.evaluations.findOne({ active: true, algorithmId: mongojs.ObjectId(algorithmId) }, callback)
