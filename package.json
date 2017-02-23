@@ -1,10 +1,11 @@
 {
-  "name": "Tetris-Api",
+  "name": "tetris-api",
   "version": "0.0.1",
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "standard"
   },
   "keywords": [
     "awesome"
@@ -23,8 +24,5 @@
     "moment": "~2.10.2",
     "mongojs": "^2.0.0",
     "morgan": "~1.6.1"
-  },
-  "scripts": {
-    "test": "standard"
   }
 }
