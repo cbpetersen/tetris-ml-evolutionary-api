@@ -19,8 +19,10 @@ exports.getSettings = function (id, callback) {
       return
     }
 
+    var randomDiff =  (settings.newWeigtRandomDifference * 2) / data.evolutionNumber
+
     _.forEach(data.weights, function (value, key) {
-      data.weights[key] += _.random(-settings.newWeigtRandomDifference, settings.newWeigtRandomDifference, true)
+      data.weights[key] += _.random(-randomDiff, randomDiff, true)
     })
 
     callback(err, data)
