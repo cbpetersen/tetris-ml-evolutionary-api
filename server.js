@@ -68,15 +68,34 @@ function endpoints (server) {
     })
   })
 
+  var saveResultsInBulks = function () {
+    var buffer = []
+    var size = 0
+    return function (id, gameData) {
+      delete gameData.name
+
+      buffer.push(gameData)
+      size++
+
+      if (size % 50 === 0) {
+        db.saveMultipleGameStatuses(id, buffer, function(error, data) {
+          if (error) {
+            throw new Error(error)
+          }
+
+          buffer = [];
+          size = 0
+        })
+      }
+    }
+  }()
+
+
   server.post('/evolutions/:id/result', function (req, res) {
     var id = req.params.id
     var gameData = req.body
 
-    db.saveGameStatus(id, gameData, function (error, data) {
-      if (error) {
-        throw new Error(error)
-      }
-    })
+    saveResultsInBulks(id, gameData)
 
     res.sendStatus(200)
   })

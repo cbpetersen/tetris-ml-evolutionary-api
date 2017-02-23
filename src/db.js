@@ -16,7 +16,11 @@ exports.getSettings = function (algorithmId, callback) {
 }
 
 exports.saveGameStatus = function (algorithmId, playStatus, callback) {
-  db.evaluations.update({ active: true, algorithmId: mongojs.ObjectId(algorithmId) }, {$addToSet: { gamesPlayed: playStatus }}, callback)
+  db.evaluations.update({ active: true, algorithmId: mongojs.ObjectId(algorithmId) }, { $push: { gamesPlayed: playStatus }}, callback)
+}
+
+exports.saveMultipleGameStatuses = function (algorithmId, playStatuses, callback) {
+  db.evaluations.update({ active: true, algorithmId: mongojs.ObjectId(algorithmId) }, { $push: { gamesPlayed: { $each: playStatuses } }}, callback)
 }
 
 exports.saveEvolution = function (evaluation, callback) {
