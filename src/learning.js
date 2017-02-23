@@ -42,7 +42,10 @@ exports.getBestEvaluations = function (algorithmId, callback) {
       return n > data.evolutionFitness
     })
 
+
+
     if (!aboveThreshold) {
+      console.log('current evolution: ' + data.evolutionNumber)
       console.log('avg overallAvgFitness: ' + overallAvgFitness + ' | old avg overallAvgFitness: ' + data.overallAvgFitness)
       console.log('Top: ' + _.map(bestPerformingGames, 'fitness'))
       console.log('Top avg evolutionFitness: ' + evolutionFitness + ' | old avg evolutionFitness: ' + data.evolutionFitness)
@@ -68,13 +71,13 @@ exports.getBestEvaluations = function (algorithmId, callback) {
     var avgWeights = {}
 
     _.each(_.first(weights), function (value, key) {
-      avgWeights[key] = Math.ceil(_.sumBy(weights, key) / weights.length)
+      avgWeights[key] = _.sumBy(weights, key) / weights.length
     })
 
     var next = {
       weights: avgWeights,
       name: data.name,
-      evolutionNumber: data.evolutionNumber,
+      evolutionNumber: data.evolutionNumber + 1,
       gamesPlayed: [],
       active: true,
       overallAvgFitness: overallAvgFitness,
@@ -83,11 +86,12 @@ exports.getBestEvaluations = function (algorithmId, callback) {
       algorithmId: data.algorithmId
     }
 
+    console.dir(['next evolution', next], { depth: null, colors: true })
     db.saveEvolution(next, callback)
   })
 }
 
-setInterval(function () {
+function runEvolution() {
   db.getEvolutions(function (err, data) {
     if (err) {
       console.error(err)
@@ -101,6 +105,7 @@ setInterval(function () {
           return
         }
 
+        console.log('Progress for ' + data.name + ' ' + data.gamesPlayed.length + '/' + settings.minGamesToEvaluate)
         if (data.gamesPlayed.length > settings.minGamesToEvaluate) {
           exports.getBestEvaluations(evolution.algorithmId, function (err, data) {
             if (err) {
@@ -115,4 +120,8 @@ setInterval(function () {
       })
     })
   })
-}, settings.timeBetweenEvolutionCalculations)
+}
+
+setInterval(runEvolution, settings.timeBetweenEvolutionCalculations)
+
+runEvolution()
