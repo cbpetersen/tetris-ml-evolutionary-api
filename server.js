@@ -41,6 +41,7 @@ function endpoints (server) {
 
       if (data) {
         res.json(data)
+        return
       }
 
       res.sendStatus(404)
