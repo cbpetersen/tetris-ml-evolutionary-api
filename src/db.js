@@ -16,11 +16,11 @@ exports.getSettings = function (algorithmId, callback) {
 }
 
 exports.saveGameStatus = function (algorithmId, playStatus, callback) {
-  db.evaluations.update({ active: true, algorithmId: mongojs.ObjectId(algorithmId) }, { $push: { gamesPlayed: playStatus }}, callback)
+  db.evaluations.update({ active: true, algorithmId: mongojs.ObjectId(algorithmId) }, { $push: { gamesPlayed: playStatus } }, callback)
 }
 
 exports.saveMultipleGameStatuses = function (algorithmId, playStatuses, callback) {
-  db.evaluations.update({ active: true, algorithmId: mongojs.ObjectId(algorithmId) }, { $push: { gamesPlayed: { $each: playStatuses } }}, callback)
+  db.evaluations.update({ active: true, algorithmId: mongojs.ObjectId(algorithmId) }, { $push: { gamesPlayed: { $each: playStatuses } } }, callback)
 }
 
 exports.saveEvolution = function (evaluation, callback) {
@@ -35,7 +35,7 @@ exports.newEvolution = function (data, callback) {
   exports.saveEvolution({
     name: data.name,
     weights: data.weights,
-    evolutionNumber: 1,
+    evolutionNumber: 1.0,
     gamesPlayed: [],
     overallAvgFitness: 0,
     bestFitness: 0,

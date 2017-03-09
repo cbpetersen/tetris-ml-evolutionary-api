@@ -19,7 +19,7 @@ exports.getSettings = function (id, callback) {
       return
     }
 
-    var randomDiff =  (settings.newWeigtRandomDifference * 2) / data.evolutionNumber
+    var randomDiff = (settings.newWeigtRandomDifference * 2) / data.evolutionNumber
 
     _.forEach(data.weights, function (value, key) {
       data.weights[key] += _.random(-randomDiff, randomDiff, true)
@@ -43,8 +43,6 @@ exports.getBestEvaluations = function (algorithmId, callback) {
     var aboveThreshold = _.every(_.map(bestPerformingGames, 'fitness'), function (n) {
       return n > data.evolutionFitness
     })
-
-
 
     if (!aboveThreshold) {
       console.log('current evolution: ' + data.evolutionNumber)
@@ -93,7 +91,7 @@ exports.getBestEvaluations = function (algorithmId, callback) {
   })
 }
 
-function runEvolution() {
+function runEvolution () {
   db.getEvolutions(function (err, data) {
     if (err) {
       console.error(err)

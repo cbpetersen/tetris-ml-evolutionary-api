@@ -2,6 +2,7 @@ var express = require('express')
 var app = express()
 var cors = require('cors')
 var _ = require('lodash')
+var path = require('path')
 var db = require('./src/db')
 var learning = require('./src/learning')
 var bodyParser = require('body-parser')
@@ -22,11 +23,11 @@ endpoints(app)
 
 function endpoints (server) {
   server.get('/', function (req, res) {
-    res.sendFile(__dirname + '/index.html')
+    res.sendFile(path.join(__dirname, '/index.html'))
   })
 
   server.get('/crossdomain.xml', function (req, res) {
-    res.sendFile(__dirname + '/crossDomainPolicy.xml')
+    res.sendFile(path.join(__dirname, '/crossDomainPolicy.xml'))
   })
 
   server.get('/ping', function (req, res) {
@@ -68,7 +69,7 @@ function endpoints (server) {
     })
   })
 
-  var saveResultsInBulks = function () {
+  var saveResultsInBulks = (function () {
     var buffer = []
     var size = 0
     return function (id, gameData) {
@@ -78,18 +79,17 @@ function endpoints (server) {
       size++
 
       if (size % 50 === 0) {
-        db.saveMultipleGameStatuses(id, buffer, function(error, data) {
+        db.saveMultipleGameStatuses(id, buffer, function (error, data) {
           if (error) {
             throw new Error(error)
           }
 
-          buffer = [];
+          buffer = []
           size = 0
         })
       }
     }
-  }()
-
+  })()
 
   server.post('/evolutions/:id/result', function (req, res) {
     var id = req.params.id
