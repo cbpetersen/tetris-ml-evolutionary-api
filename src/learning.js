@@ -1,6 +1,35 @@
 var db = require('./db')
 var settings = require('./settings.json')
 var _ = require('lodash')
+var combinations = require('./combinations')
+
+let preCalculatedWeights = {}
+let preCalculatedWeightsPointer = {}
+
+exports.newAlgorithm = (data, callback) => {
+  db.getEvolutions((err, dbRsp) => {
+    if (err) {
+      callback(err)
+      return
+    }
+
+    if (_.some(dbRsp, {name: data.name})) {
+      let algorithm = _.first(dbRsp, {name: data.name})
+      return exports.getSettings(algorithm.algorithmId, callback)
+    }
+
+    db.newEvolution(data, (err, dbRsp) => {
+      if (err) {
+        callback(err)
+        return
+      }
+
+      dbRsp.weights = preCalculateWeights(dbRsp.algorithmId, dbRsp.evolutionNumber, dbRsp.weights)
+
+      callback(err, dbRsp)
+    })
+  })
+}
 
 exports.getSettings = function (id, callback) {
   db.getSettings(id, function (err, data) {
@@ -19,11 +48,7 @@ exports.getSettings = function (id, callback) {
       return
     }
 
-    var randomDiff = (settings.newWeigtRandomDifference * 2) / data.evolutionNumber
-
-    _.forEach(data.weights, function (value, key) {
-      data.weights[key] += _.random(-randomDiff, randomDiff, true)
-    })
+    data.weights = getCalculatedWeights(data.algorithmId, data.evolutionNumber, data.weights)
 
     callback(err, data)
   })
@@ -78,6 +103,7 @@ exports.getBestEvaluations = function (algorithmId, callback) {
       weights: avgWeights,
       name: data.name,
       evolutionNumber: data.evolutionNumber + 1,
+      evolutionId: db.createId(),
       gamesPlayed: [],
       active: true,
       overallAvgFitness: overallAvgFitness,
@@ -86,9 +112,33 @@ exports.getBestEvaluations = function (algorithmId, callback) {
       algorithmId: data.algorithmId
     }
 
+    preCalculateWeights(next.algorithmId, next.evolutionNumber, next.weights)
+
     console.dir(['next evolution', next], { depth: null, colors: true })
-    db.saveEvolution(next, callback)
+    db.saveEvolution(next, data.evolutionId, callback)
   })
+}
+
+const getCalculatedWeights = (algorithmId, evolutionNumber, weights) => {
+  if (preCalculatedWeights[algorithmId]) {
+    let newPointerValue = ++preCalculatedWeightsPointer[algorithmId]
+    if (newPointerValue >= preCalculatedWeights[algorithmId].length) {
+      newPointerValue = 0
+      preCalculatedWeightsPointer[algorithmId] = 0
+    }
+
+    return preCalculatedWeights[algorithmId][newPointerValue]
+  }
+
+  return preCalculateWeights(algorithmId, evolutionNumber, weights)
+}
+
+const preCalculateWeights = (algorithmId, evolutionNumber, weights) => {
+  let randomDiff = (settings.newWeigtRandomDifference - (Math.min(0.9, evolutionNumber * 0.1) * settings.newWeigtRandomDifference)) / settings.newWeigtRandomDifference
+  preCalculatedWeights[algorithmId] = combinations.generateCombinations(weights, randomDiff)
+  preCalculatedWeightsPointer[algorithmId] = 0
+
+  return preCalculatedWeights[algorithmId][0]
 }
 
 function runEvolution () {
@@ -106,7 +156,7 @@ function runEvolution () {
         }
 
         console.log('Progress for ' + data.name + ' ' + data.gamesPlayed.length + '/' + settings.minGamesToEvaluate)
-        if (data.gamesPlayed.length > settings.minGamesToEvaluate) {
+        if (preCalculatedWeights[data.algorithmId] && data.gamesPlayed.length > preCalculatedWeights[data.algorithmId].length) {
           exports.getBestEvaluations(evolution.algorithmId, function (err, data) {
             if (err) {
               console.error(err)

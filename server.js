@@ -17,7 +17,7 @@ var errorHandler = function (err, req, res, next) {
 app.use(cors())
 app.use(bodyParser.json())
 app.use('/public', express.static('public'))
-app.use(require('morgan')('dev'))
+// app.use(require('morgan')('dev'))
 
 endpoints(app)
 
@@ -115,7 +115,7 @@ function endpoints (server) {
       }
     })
 
-    db.newEvolution(req.body, function (error, data) {
+    learning.newAlgorithm(req.body, function (error, data) {
       if (error) {
         throw new Error(error)
       }
