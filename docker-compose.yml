@@ -1,11 +1,14 @@
-version: "2.1"
+version: "3.2"
+
 services:
+
   mongodb:
     image: mongo
     ports:
       - "27017:27017"
     command: "--smallfiles --logpath=/dev/null"
     restart: always
+
   api:
     build: .
     command: node server.js
@@ -16,9 +19,35 @@ services:
     links:
       - mongodb
     depends_on:
-      mongodb:
-        condition: service_started
+      - mongodb
+        # condition: service_started
     restart: always
     environment:
       PORT: 3000 # this is optional, allows express to use process.env.PORT instead of a raw 3000
       DB: mongodb
+    deploy:
+      mode: replicated
+      replicas: 2
+      labels: [APP=Api]
+      # service resource management
+      resources:
+        # Hard limit - Docker does not allow to allocate more
+        limits:
+          cpus: '0.25'
+          memory: 512M
+        # Soft limit - Docker makes best effort to return to it
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      # service restart policy
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      # service update configuration
+      update_config:
+        parallelism: 3
+        delay: 10s
+        failure_action: continue
+        monitor: 60s
