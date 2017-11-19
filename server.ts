@@ -1,12 +1,12 @@
-var express = require('express')
-var app = express()
-var cors = require('cors')
-var _ = require('lodash')
-var path = require('path')
-var db = require('./src/db')
-var learning = require('./src/learning')
-var bodyParser = require('body-parser')
+import * as _ from 'lodash'
+import * as bodyParser  from 'body-parser'
+import * as cors  from 'cors'
+import * as db from './src/db'
+import * as express from 'express'
+import * as learning from './src/learning'
+import * as path from 'path'
 
+const app = express()
 require('http').createServer(app).listen(3000)
 
 var errorHandler = function (err, req, res, next) {
@@ -14,93 +14,83 @@ var errorHandler = function (err, req, res, next) {
   res.sendStatus(500)
 }
 
+const asyncMiddleware = fn =>
+(req, res, next) => {
+  Promise.resolve(fn(req, res, next))
+    .catch(next);
+};
+
 app.use(cors())
 app.use(bodyParser.json())
 app.use('/public', express.static('public'))
-// app.use(require('morgan')('dev'))
+app.use(require('morgan')('dev'))
 
-endpoints(app)
-
-function endpoints (server) {
-  server.get('/', function (req, res) {
+const endpoints = (server) => {
+  server.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '/index.html'))
   })
 
-  server.get('/crossdomain.xml', function (req, res) {
+  server.get('/crossdomain.xml', (req, res) => {
     res.sendFile(path.join(__dirname, '/crossDomainPolicy.xml'))
   })
 
-  server.get('/ping', function (req, res) {
+  server.get('/ping', (req, res) => {
     res.json({ ping: 'pong' })
   })
 
-  server.get('/evolutions/:id/settings', function (req, res) {
-    learning.getSettings(req.params.id, function (error, data) {
-      if (error) {
-        throw new Error(error)
-      }
-
-      if (data) {
-        res.json(data)
+  server.get('/evolutions/:id/settings', async (req, res) => {
+    try {
+      const data = await learning.getSettings(req.params.id)
+      if (!data) {
+        res.sendStatus(404)
         return
       }
 
-      res.sendStatus(404)
-    })
-  })
-
-  server.get('/evolutions', function (req, res) {
-    db.getEvolutions(function (error, data) {
-      if (error) {
-        throw new Error(error)
-      }
-
       res.json(data)
-    })
+    } catch (error) {
+      console.error(error)
+      throw new Error(error)
+    }
   })
 
-  server.get('/evolutions/:id/best', function (req, res) {
-    learning.getBestEvaluations(req.params.id, function (error, data) {
-      if (error) {
-        throw new Error(error)
-      }
-
-      res.json(data)
-    })
+  server.get('/evolutions', async (req, res) => {
+    const data  = await db.getEvolutions()
+    res.json(data)
   })
 
-  var saveResultsInBulks = (function () {
+  server.get('/evolutions/:id/best', async (req, res) => {
+    const data  = await learning.getBestEvaluations(req.params.id)
+    res.json(data)
+  })
+
+  var saveResultsInBulks = (() => {
     var buffer = []
     var size = 0
-    return function (id, gameData) {
+    return async (id, gameData) => {
       delete gameData.name
 
       buffer.push(gameData)
       size++
 
       if (size % 50 === 0) {
-        db.saveMultipleGameStatuses(id, buffer, function (error, data) {
-          if (error) {
-            throw new Error(error)
-          }
+        const saveData = await db.saveMultipleGameStatuses(id, buffer)
 
-          buffer = []
-          size = 0
-        })
+        buffer = []
+        size = 0
       }
     }
   })()
 
-  server.post('/evolutions/:id/result', function (req, res) {
+  server.post('/evolutions/:id/result', async (req, res) => {
     var id = req.params.id
     var gameData = req.body
 
-    saveResultsInBulks(id, gameData)
+    await saveResultsInBulks(id, gameData)
 
     res.sendStatus(200)
   })
 
-  server.post('/evolutions', function (req, res) {
+  server.post('/evolutions', async (req, res) => {
     if (!req.body) {
       throw new Error('payload missing')
     }
@@ -115,18 +105,16 @@ function endpoints (server) {
       }
     })
 
-    learning.newAlgorithm(req.body, function (error, data) {
-      if (error) {
-        throw new Error(error)
-      }
-
-      res.json(data)
-    })
+    const data = await learning.newAlgorithm(req.body)
+    res.json(data)
   })
 
   app.get('*', function (req, res) {
     res.sendStatus(404)
   })
 
+  server.use(asyncMiddleware)
   server.use(errorHandler)
 }
+
+endpoints(app)

@@ -1,65 +1,50 @@
-var db = require('./db')
-var settings = require('./settings.json')
-var _ = require('lodash')
-var combinations = require('./combinations')
+import * as _ from 'lodash'
+import * as  combinations from './combinations'
+import * as db from './db'
+
+import { getEvolutions } from './db';
+
+const settings: EApi.Settings = require('./settings.json')
 
 let preCalculatedWeights = {}
 let preCalculatedWeightsPointer = {}
 
-exports.newAlgorithm = (data, callback) => {
-  db.getEvolutions((err, dbRsp) => {
-    if (err) {
-      callback(err)
-      return
-    }
-
+export const newAlgorithm = async (data: any) => {
+  try {
+    const dbRsp = await db.getEvolutions()
     if (_.some(dbRsp, {name: data.name})) {
-      let algorithm = _.first(dbRsp, {name: data.name})
-      return exports.getSettings(algorithm.algorithmId, callback)
+      // let algorithm = _.first(dbRsp, {name: data.name})
+      let algorithm = _.first(dbRsp)
+      return await getSettings(algorithm.algorithmId)
     }
 
-    db.newEvolution(data, (err, dbRsp) => {
-      if (err) {
-        callback(err)
-        return
-      }
-
-      dbRsp.weights = preCalculateWeights(dbRsp.algorithmId, dbRsp.evolutionNumber, dbRsp.weights)
-
-      callback(err, dbRsp)
-    })
-  })
+    const newE = await db.newEvolution(data)
+    newE.weights = preCalculateWeights(newE.algorithmId, newE.evolutionNumber, newE.weights)
+    return newE
+  } catch (error) {
+    console.log(error)
+    throw new Error(error)
+  }
 }
 
-exports.getSettings = function (id, callback) {
-  db.getSettings(id, function (err, data) {
-    if (err) {
-      callback(err)
-      return
-    }
+export const getSettings = async (id: string) => {
+  const data = await db.getSettings(id)
 
-    if (!data) {
-      callback()
-      return
-    }
+  if (!data) {
+    return
+  }
 
-    if (_.isEmpty(data.weights)) {
-      callback(err, data)
-      return
-    }
+  if (_.isEmpty(data.weights)) {
+    return data
+  }
 
-    data.weights = getCalculatedWeights(data.algorithmId, data.evolutionNumber, data.weights)
+  data.weights = getCalculatedWeights(data.algorithmId, data.evolutionNumber, data.weights)
 
-    callback(err, data)
-  })
+  return data
 }
 
-exports.getBestEvaluations = function (algorithmId, callback) {
-  db.getCurrentEvolution(algorithmId, function (err, data) {
-    if (err) {
-      console.error(err)
-      callback(err)
-    }
+export const getBestEvaluations = async (algorithmId: string) => {
+  const data = await db.getCurrentEvolution(algorithmId)
 
     var bestPerformingGames = _.takeRight(_.sortBy(data.gamesPlayed, 'fitness'), settings.bestPerformingGamesCount)
     var evolutionFitness = Math.ceil(_.sumBy(bestPerformingGames, 'fitness') / bestPerformingGames.length)
@@ -78,7 +63,7 @@ exports.getBestEvaluations = function (algorithmId, callback) {
     }
 
     if (bestPerformingGames.length === 0) {
-      callback(undefined, {
+      return {
         weights: data.weights,
         evolutionNumber: data.evolutionNumber,
         gamesPlayed: [],
@@ -88,12 +73,11 @@ exports.getBestEvaluations = function (algorithmId, callback) {
         evolutionFitness: evolutionFitness,
         algorithmId: data.algorithmId,
         comment: 'No evolution perfomed'
-      })
-      return
+      }
     }
 
     var weights = _.map(bestPerformingGames, 'weights')
-    var avgWeights = {}
+    var avgWeights: EApi.Weights = {}
 
     _.each(_.first(weights), function (value, key) {
       avgWeights[key] = _.sumBy(weights, key) / weights.length
@@ -103,6 +87,7 @@ exports.getBestEvaluations = function (algorithmId, callback) {
       weights: avgWeights,
       name: data.name,
       evolutionNumber: data.evolutionNumber + 1,
+      permutatedWeights: null,
       evolutionId: db.createId(),
       gamesPlayed: [],
       active: true,
@@ -115,8 +100,7 @@ exports.getBestEvaluations = function (algorithmId, callback) {
     preCalculateWeights(next.algorithmId, next.evolutionNumber, next.weights)
 
     console.dir(['next evolution', next], { depth: null, colors: true })
-    db.saveEvolution(next, data.evolutionId, callback)
-  })
+    return await db.saveEvolution(next, data.evolutionId)
 }
 
 const getCalculatedWeights = (algorithmId, evolutionNumber, weights) => {
@@ -141,35 +125,23 @@ const preCalculateWeights = (algorithmId, evolutionNumber, weights) => {
   return preCalculatedWeights[algorithmId][0]
 }
 
-function runEvolution () {
-  db.getEvolutions(function (err, data) {
-    if (err) {
-      console.error(err)
-      return
-    }
+const runEvolution = async () => {
+  try {
+    const evolutions = await db.getEvolutions()
 
-    _.each(data, function (evolution) {
-      db.getCurrentEvolution(evolution.algorithmId, function (err, data) {
-        if (err) {
-          console.error(err)
-          return
-        }
+    _.each(evolutions, async (evolution) => {
+      const currentEvolution = await db.getCurrentEvolution(evolution.algorithmId)
+        console.log('Progress for ' + currentEvolution.name + ' ' + currentEvolution.gamesPlayed.length + '/' + settings.minGamesToEvaluate)
+        if (preCalculatedWeights[currentEvolution.algorithmId] && currentEvolution.gamesPlayed.length > preCalculatedWeights[currentEvolution.algorithmId].length) {
+          const bestEvolutions = await getBestEvaluations(evolution.algorithmId)
 
-        console.log('Progress for ' + data.name + ' ' + data.gamesPlayed.length + '/' + settings.minGamesToEvaluate)
-        if (preCalculatedWeights[data.algorithmId] && data.gamesPlayed.length > preCalculatedWeights[data.algorithmId].length) {
-          exports.getBestEvaluations(evolution.algorithmId, function (err, data) {
-            if (err) {
-              console.error(err)
-              return
-            }
-
-            console.log(data)
+            console.log(bestEvolutions)
             console.log('Evolution!!')
-          })
         }
       })
-    })
-  })
+  } catch (error) {
+    console.error(error)
+  }
 }
 
 setInterval(runEvolution, settings.timeBetweenEvolutionCalculations)
