@@ -1,7 +1,7 @@
 import * as mongoist from 'mongoist'
 import * as mongojs from 'mongojs'
 
-var dbHost = process.env.DB ? `${process.env.DB}/evolutionApi` : 'evolutionApi'
+const dbHost = process.env.DB ? `${process.env.DB}/evolutionApi` : 'evolutionApi'
 const db = mongoist(dbHost, ['evaluations'])
 
 export const getCurrentEvolution = async function (algorithmId: string): Promise<EApi.Algorithm> {

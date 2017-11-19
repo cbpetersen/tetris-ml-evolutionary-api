@@ -2,19 +2,19 @@ import * as _ from 'lodash'
 import * as  combinations from './combinations'
 import * as db from './db'
 
-import { getEvolutions } from './db';
+import { getEvolutions } from './db'
 
 const settings: EApi.Settings = require('./settings.json')
 
-let preCalculatedWeights = {}
-let preCalculatedWeightsPointer = {}
+const preCalculatedWeights = {}
+const preCalculatedWeightsPointer = {}
 
 export const newAlgorithm = async (data: any) => {
   try {
     const dbRsp = await db.getEvolutions()
     if (_.some(dbRsp, {name: data.name})) {
       // let algorithm = _.first(dbRsp, {name: data.name})
-      let algorithm = _.first(dbRsp)
+      const algorithm = _.first(dbRsp)
       return await getSettings(algorithm.algorithmId)
     }
 
@@ -46,11 +46,11 @@ export const getSettings = async (id: string) => {
 export const getBestEvaluations = async (algorithmId: string) => {
   const data = await db.getCurrentEvolution(algorithmId)
 
-    var bestPerformingGames = _.takeRight(_.sortBy(data.gamesPlayed, 'fitness'), settings.bestPerformingGamesCount)
-    var evolutionFitness = Math.ceil(_.sumBy(bestPerformingGames, 'fitness') / bestPerformingGames.length)
-    var overallAvgFitness = Math.ceil(_.sumBy(data.gamesPlayed, 'fitness') / data.gamesPlayed.length)
+    const bestPerformingGames = _.takeRight(_.sortBy(data.gamesPlayed, 'fitness'), settings.bestPerformingGamesCount)
+    const evolutionFitness = Math.ceil(_.sumBy(bestPerformingGames, 'fitness') / bestPerformingGames.length)
+    const overallAvgFitness = Math.ceil(_.sumBy(data.gamesPlayed, 'fitness') / data.gamesPlayed.length)
 
-    var aboveThreshold = _.every(_.map(bestPerformingGames, 'fitness'), function (n) {
+    const aboveThreshold = _.every(_.map(bestPerformingGames, 'fitness'), function (n) {
       return n > data.evolutionFitness
     })
 
@@ -76,18 +76,18 @@ export const getBestEvaluations = async (algorithmId: string) => {
       }
     }
 
-    var weights = _.map(bestPerformingGames, 'weights')
-    var avgWeights: EApi.Weights = {}
+    const weights = _.map(bestPerformingGames, 'weights')
+    const avgWeights: EApi.Weights = {}
 
     _.each(_.first(weights), function (value, key) {
       avgWeights[key] = _.sumBy(weights, key) / weights.length
     })
 
-    var next = {
+    const next = {
       weights: avgWeights,
       name: data.name,
       evolutionNumber: data.evolutionNumber + 1,
-      permutatedWeights: null,
+      permutatedWeights: undefined,
       evolutionId: db.createId(),
       gamesPlayed: [],
       active: true,
@@ -99,7 +99,7 @@ export const getBestEvaluations = async (algorithmId: string) => {
 
     preCalculateWeights(next.algorithmId, next.evolutionNumber, next.weights)
 
-    console.dir(['next evolution', next], { depth: null, colors: true })
+    console.dir(['next evolution', next], { depth: undefined, colors: true })
     return await db.saveEvolution(next, data.evolutionId)
 }
 
@@ -118,7 +118,7 @@ const getCalculatedWeights = (algorithmId, evolutionNumber, weights) => {
 }
 
 const preCalculateWeights = (algorithmId, evolutionNumber, weights) => {
-  let randomDiff = (settings.newWeigtRandomDifference - (Math.min(0.9, evolutionNumber * 0.1) * settings.newWeigtRandomDifference)) / settings.newWeigtRandomDifference
+  const randomDiff = (settings.newWeigtRandomDifference - (Math.min(0.9, evolutionNumber * 0.1) * settings.newWeigtRandomDifference)) / settings.newWeigtRandomDifference
   preCalculatedWeights[algorithmId] = combinations.generateCombinations(weights, randomDiff)
   preCalculatedWeightsPointer[algorithmId] = 0
 

@@ -1,6 +1,6 @@
 export const generateCombinations = (weights: any, randomDiff: number) => {
-  let keys = Object.keys(weights)
-  let stepsArr = [-randomDiff, 0, randomDiff]
+  const keys = Object.keys(weights)
+  const stepsArr = [-randomDiff, 0, randomDiff]
   let arr: ReadonlyArray<any> = []
 
   for (let i = 0; i < keys.length; i++) {
@@ -21,10 +21,10 @@ export const generateCombinations = (weights: any, randomDiff: number) => {
 }
 
 const add = (stepsArr: number[], obj: any, keyToAdd: string, baseValue: number) => {
-  let objs = []
+  const objs = []
 
   for (let j = 0; j < stepsArr.length; j++) {
-    let o:any = {}
+    const o: any = {}
     o[keyToAdd] = stepsArr[j] + baseValue
     objs.push({...obj, o})
   }

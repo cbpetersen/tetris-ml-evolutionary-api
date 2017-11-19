@@ -9,7 +9,7 @@ import * as path from 'path'
 const app = express()
 require('http').createServer(app).listen(3000)
 
-var errorHandler = function (err, req, res, next) {
+const errorHandler = function (err, req, res, next) {
   console.log(err.stack)
   res.sendStatus(500)
 }
@@ -17,8 +17,8 @@ var errorHandler = function (err, req, res, next) {
 const asyncMiddleware = fn =>
 (req, res, next) => {
   Promise.resolve(fn(req, res, next))
-    .catch(next);
-};
+    .catch(next)
+}
 
 app.use(cors())
 app.use(bodyParser.json())
@@ -63,9 +63,9 @@ const endpoints = (server) => {
     res.json(data)
   })
 
-  var saveResultsInBulks = (() => {
-    var buffer = []
-    var size = 0
+  const saveResultsInBulks = (() => {
+    let buffer = []
+    let size = 0
     return async (id, gameData) => {
       delete gameData.name
 
@@ -82,8 +82,8 @@ const endpoints = (server) => {
   })()
 
   server.post('/evolutions/:id/result', async (req, res) => {
-    var id = req.params.id
-    var gameData = req.body
+    const id = req.params.id
+    const gameData = req.body
 
     await saveResultsInBulks(id, gameData)
 
