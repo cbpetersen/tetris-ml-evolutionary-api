@@ -1,30 +1,54 @@
 import * as _ from 'lodash'
-import * as  combinations from './combinations'
+import * as combinations from './combinations'
 import * as db from './db'
+
+import {
+  Algorithm,
+  Dictionary,
+  GameResult,
+  GetAlgorithm,
+  NewAlgorithm,
+  Settings,
+  WeightPermutation,
+  Weights,
+} from './types'
 
 import { getEvolutions } from './db'
 
-const settings: EApi.Settings = require('./settings.json')
+const settings: Settings = require('./settings.json')
 
-const preCalculatedWeights = {}
-const preCalculatedWeightsPointer = {}
+const preCalculatedWeights: Dictionary<Weights[]> = {}
+const preCalculatedWeightsPointer: Dictionary<number> = {}
 
-export const newAlgorithm = async (data: any) => {
-  try {
-    const dbRsp = await db.getEvolutions()
-    if (_.some(dbRsp, {name: data.name})) {
-      // let algorithm = _.first(dbRsp, {name: data.name})
-      const algorithm = _.first(dbRsp)
-      return await getSettings(algorithm.algorithmId)
+export const createNewAlgorithm = async (data: GetAlgorithm) => {
+  const permutations = preCalculateWeights(0, data.weights)
+  const weightPermutations: WeightPermutation[] = permutations.map((weight) => {
+    return {
+      id: db.createId(),
+      weights: weight,
+      gameResults: [],
+      gamesPlayed: 0,
+      avgFitness: 0
     }
+  })
 
-    const newE = await db.newEvolution(data)
-    newE.weights = preCalculateWeights(newE.algorithmId, newE.evolutionNumber, newE.weights)
-    return newE
-  } catch (error) {
-    console.log(error)
-    throw new Error(error)
+  const algorithm: NewAlgorithm = {
+    ...data,
+    permutations: weightPermutations
   }
+
+  const newE = await db.newEvolution(algorithm)
+  cacheCalculatedWeights(newE.algorithmId, permutations)
+  return newE
+}
+
+export const getOrCreateAlgorithm = async (data: GetAlgorithm) => {
+  const algorithm = await db.getEvolutionByName(data.name)
+  if (algorithm) {
+    return await getSettings(algorithm.algorithmId)
+  }
+
+  return createNewAlgorithm(data)
 }
 
 export const getSettings = async (id: string) => {
@@ -46,61 +70,62 @@ export const getSettings = async (id: string) => {
 export const getBestEvaluations = async (algorithmId: string) => {
   const data = await db.getCurrentEvolution(algorithmId)
 
-    const bestPerformingGames = _.takeRight(_.sortBy(data.gamesPlayed, 'fitness'), settings.bestPerformingGamesCount)
-    const evolutionFitness = Math.ceil(_.sumBy(bestPerformingGames, 'fitness') / bestPerformingGames.length)
-    const overallAvgFitness = Math.ceil(_.sumBy(data.gamesPlayed, 'fitness') / data.gamesPlayed.length)
+  const bestPerformingGames = _.takeRight(_.sortBy(data.gamesPlayed, 'fitness'), settings.bestPerformingGamesCount)
+  const evolutionFitness = Math.ceil(_.sumBy(bestPerformingGames, 'fitness') / bestPerformingGames.length)
+  const overallAvgFitness = Math.ceil(_.sumBy(data.gamesPlayed, 'fitness') / data.gamesPlayed.length)
 
-    const aboveThreshold = _.every(_.map(bestPerformingGames, 'fitness'), function (n) {
-      return n > data.evolutionFitness
-    })
+  const aboveThreshold = _.every(_.map(bestPerformingGames, 'fitness'), function (n) {
+    return n > data.evolutionFitness
+  })
 
-    if (!aboveThreshold) {
-      console.log('current evolution: ' + data.evolutionNumber)
-      console.log('avg overallAvgFitness: ' + overallAvgFitness + ' | old avg overallAvgFitness: ' + data.overallAvgFitness)
-      console.log('Top: ' + _.map(bestPerformingGames, 'fitness'))
-      console.log('Top avg evolutionFitness: ' + evolutionFitness + ' | old avg evolutionFitness: ' + data.evolutionFitness)
-      return
-    }
+  if (!aboveThreshold) {
+    console.log('current evolution: ' + data.evolutionNumber)
+    console.log('avg overallAvgFitness: ' + overallAvgFitness + ' | old avg overallAvgFitness: ' + data.overallAvgFitness)
+    console.log('Top: ' + _.map(bestPerformingGames, 'fitness'))
+    console.log('Top avg evolutionFitness: ' + evolutionFitness + ' | old avg evolutionFitness: ' + data.evolutionFitness)
+    return
+  }
 
-    if (bestPerformingGames.length === 0) {
-      return {
-        weights: data.weights,
-        evolutionNumber: data.evolutionNumber,
-        gamesPlayed: [],
-        active: true,
-        overallAvgFitness: overallAvgFitness,
-        bestFitness: 0,
-        evolutionFitness: evolutionFitness,
-        algorithmId: data.algorithmId,
-        comment: 'No evolution perfomed'
-      }
-    }
-
-    const weights = _.map(bestPerformingGames, 'weights')
-    const avgWeights: EApi.Weights = {}
-
-    _.each(_.first(weights), function (value, key) {
-      avgWeights[key] = _.sumBy(weights, key) / weights.length
-    })
-
-    const next = {
-      weights: avgWeights,
-      name: data.name,
-      evolutionNumber: data.evolutionNumber + 1,
-      permutatedWeights: undefined,
-      evolutionId: db.createId(),
+  if (bestPerformingGames.length === 0) {
+    return {
+      weights: data.weights,
+      evolutionNumber: data.evolutionNumber,
       gamesPlayed: [],
       active: true,
       overallAvgFitness: overallAvgFitness,
-      bestFitness: _.maxBy(bestPerformingGames, 'fitness').fitness,
+      bestFitness: 0,
       evolutionFitness: evolutionFitness,
-      algorithmId: data.algorithmId
+      algorithmId: data.algorithmId,
+      comment: 'No evolution perfomed'
     }
+  }
 
-    preCalculateWeights(next.algorithmId, next.evolutionNumber, next.weights)
+  const weights = _.map(bestPerformingGames, 'weights')
+  const avgWeights: Weights = {}
 
-    console.dir(['next evolution', next], { depth: undefined, colors: true })
-    return await db.saveEvolution(next, data.evolutionId)
+  _.each(_.first(weights), function (value, key) {
+    avgWeights[key] = _.sumBy(weights, key) / weights.length
+  })
+
+  const permutations = preCalculateWeights(data.evolutionNumber + 1, avgWeights)
+  const next: Algorithm = {
+    weights: avgWeights,
+    name: data.name,
+    evolutionNumber: data.evolutionNumber + 1,
+    permutatedWeights: undefined,
+    evolutionId: db.createId(),
+    gamesPlayed: [],
+    active: true,
+    overallAvgFitness: overallAvgFitness,
+    bestFitness: _.maxBy(bestPerformingGames, 'fitness').fitness,
+    evolutionFitness: evolutionFitness,
+    algorithmId: data.algorithmId
+  }
+
+  cacheCalculatedWeights(next.algorithmId, permutations)
+
+  console.dir(['next evolution', next], { depth: undefined, colors: true })
+  return await db.saveEvolution(next, data.evolutionId)
 }
 
 const getCalculatedWeights = (algorithmId, evolutionNumber, weights) => {
@@ -114,15 +139,23 @@ const getCalculatedWeights = (algorithmId, evolutionNumber, weights) => {
     return preCalculatedWeights[algorithmId][newPointerValue]
   }
 
-  return preCalculateWeights(algorithmId, evolutionNumber, weights)
+  const permutations = preCalculateWeights(evolutionNumber, weights)
+  cacheCalculatedWeights(algorithmId, permutations)
+  return permutations[0]
 }
 
-const preCalculateWeights = (algorithmId, evolutionNumber, weights) => {
-  const randomDiff = (settings.newWeigtRandomDifference - (Math.min(0.9, evolutionNumber * 0.1) * settings.newWeigtRandomDifference)) / settings.newWeigtRandomDifference
-  preCalculatedWeights[algorithmId] = combinations.generateCombinations(weights, randomDiff)
-  preCalculatedWeightsPointer[algorithmId] = 0
+export const randomDiff = (evolutionNumber: number): number => {
+  return (settings.newWeigtRandomDifference - (Math.min(0.9, evolutionNumber * 0.1) * settings.newWeigtRandomDifference)) / settings.newWeigtRandomDifference
+}
 
-  return preCalculatedWeights[algorithmId][0]
+export const preCalculateWeights = (evolutionNumber: number, weights: Weights): Weights[] => {
+  const diff = randomDiff(evolutionNumber)
+  return combinations.generateCombinations(weights, diff)
+}
+
+export const cacheCalculatedWeights = (algorithmId: string, permutations: Weights[]) => {
+  preCalculatedWeights[algorithmId] = permutations
+  preCalculatedWeightsPointer[algorithmId] = 0
 }
 
 const runEvolution = async () => {
@@ -144,6 +177,8 @@ const runEvolution = async () => {
   }
 }
 
-setInterval(runEvolution, settings.timeBetweenEvolutionCalculations)
+export const startBackgroundEvolutionTimer = () => {
+  setInterval(runEvolution, settings.timeBetweenEvolutionCalculations)
 
-runEvolution()
+  runEvolution()
+}

@@ -105,7 +105,7 @@ const endpoints = (server) => {
       }
     })
 
-    const data = await learning.newAlgorithm(req.body)
+    const data = await learning.getOrCreateAlgorithm(req.body)
     res.json(data)
   })
 
@@ -118,3 +118,4 @@ const endpoints = (server) => {
 }
 
 endpoints(app)
+learning.startBackgroundEvolutionTimer()

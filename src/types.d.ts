@@ -1,13 +1,26 @@
-declare module EApi {
+// declare module EApi {
 
-  export interface Settings {
+export interface Settings {
     newWeigtRandomDifference: number;
     bestPerformingGamesCount: number;
     minGamesToEvaluate: number;
     timeBetweenEvolutionCalculations: number;
   }
 
-  export interface Weights {
+  interface GetAlgorithm {
+    name: string;
+    weights: Weights
+  }
+
+  declare class NewAlgorithm{
+    name: string;
+    weights: Weights
+    permutations: WeightPermutation[]
+  }
+  interface Dictionary<T> {
+    [key: string]: T
+  }
+  export interface Weights extends Dictionary<number> {
   }
 
   export interface Algorithm {
@@ -15,7 +28,7 @@ declare module EApi {
     weights: Weights;
     evolutionNumber: number;
     evolutionId: string;
-    permutatedWeights: any[];
+    permutatedWeights: WeightPermutation[];
     gamesPlayed: any[];
     overallAvgFitness: number;
     bestFitness: number;
@@ -23,5 +36,16 @@ declare module EApi {
     algorithmId: string;
     active: boolean;
   }
-}
 
+  export interface GameResult {
+    fitness: number;
+  }
+
+  export interface WeightPermutation {
+    id: string;
+    weights: Weights;
+    gameResults: GameResult[];
+    gamesPlayed: number;
+    avgFitness: number;
+  }
+// }
