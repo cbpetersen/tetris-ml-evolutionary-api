@@ -4,6 +4,7 @@ import * as db from './db'
 
 import {
   Algorithm,
+  AlgorithmSettings,
   Dictionary,
   GameResult,
   GetAlgorithm,
@@ -17,18 +18,16 @@ import { getEvolutions } from './db'
 
 const settings: Settings = require('./settings.json')
 
-const preCalculatedWeights: Dictionary<Weights[]> = {}
-const preCalculatedWeightsPointer: Dictionary<number> = {}
-
 export const createNewAlgorithm = async (data: GetAlgorithm) => {
   const permutations = preCalculateWeights(0, data.weights)
-  const weightPermutations: WeightPermutation[] = permutations.map((weight) => {
+  const weightPermutations: WeightPermutation[] = permutations.map(weight => {
     return {
-      id: db.createId(),
-      weights: weight,
+      active: true,
       gameResults: [],
       gamesPlayed: 0,
-      avgFitness: 0
+      id: db.createId(),
+      totalFitness: 0,
+      weights: weight,
     }
   })
 
@@ -37,8 +36,8 @@ export const createNewAlgorithm = async (data: GetAlgorithm) => {
     permutations: weightPermutations
   }
 
-  const newE = await db.newEvolution(algorithm)
-  cacheCalculatedWeights(newE.algorithmId, permutations)
+  const newE = await db.newAlgorithm(algorithm)
+  // cacheCalculatedWeights(newE)
   return newE
 }
 
@@ -51,97 +50,109 @@ export const getOrCreateAlgorithm = async (data: GetAlgorithm) => {
   return createNewAlgorithm(data)
 }
 
-export const getSettings = async (id: string) => {
+export const getSettings = async (id: string): Promise<AlgorithmSettings> => {
   const data = await db.getSettings(id)
-
   if (!data) {
     return
   }
 
-  if (_.isEmpty(data.weights)) {
-    return data
-  }
-
-  data.weights = getCalculatedWeights(data.algorithmId, data.evolutionNumber, data.weights)
-
-  return data
-}
-
-export const getBestEvaluations = async (algorithmId: string) => {
-  const data = await db.getCurrentEvolution(algorithmId)
-
-  const bestPerformingGames = _.takeRight(_.sortBy(data.gamesPlayed, 'fitness'), settings.bestPerformingGamesCount)
-  const evolutionFitness = Math.ceil(_.sumBy(bestPerformingGames, 'fitness') / bestPerformingGames.length)
-  const overallAvgFitness = Math.ceil(_.sumBy(data.gamesPlayed, 'fitness') / data.gamesPlayed.length)
-
-  const aboveThreshold = _.every(_.map(bestPerformingGames, 'fitness'), function (n) {
-    return n > data.evolutionFitness
-  })
-
-  if (!aboveThreshold) {
-    console.log('current evolution: ' + data.evolutionNumber)
-    console.log('avg overallAvgFitness: ' + overallAvgFitness + ' | old avg overallAvgFitness: ' + data.overallAvgFitness)
-    console.log('Top: ' + _.map(bestPerformingGames, 'fitness'))
-    console.log('Top avg evolutionFitness: ' + evolutionFitness + ' | old avg evolutionFitness: ' + data.evolutionFitness)
-    return
-  }
-
-  if (bestPerformingGames.length === 0) {
-    return {
-      weights: data.weights,
-      evolutionNumber: data.evolutionNumber,
-      gamesPlayed: [],
-      active: true,
-      overallAvgFitness: overallAvgFitness,
-      bestFitness: 0,
-      evolutionFitness: evolutionFitness,
-      algorithmId: data.algorithmId,
-      comment: 'No evolution perfomed'
-    }
-  }
-
-  const weights = _.map(bestPerformingGames, 'weights')
-  const avgWeights: Weights = {}
-
-  _.each(_.first(weights), function (value, key) {
-    avgWeights[key] = _.sumBy(weights, key) / weights.length
-  })
-
-  const permutations = preCalculateWeights(data.evolutionNumber + 1, avgWeights)
-  const next: Algorithm = {
-    weights: avgWeights,
+  const minGamesPlayed = calculateMinimumGamesPlayedToReduce(data)
+  const weightPermutations = data.permutatedWeights.filter(x => x.active && x.gamesPlayed < minGamesPlayed)
+  const weightPermutation = weightPermutations.length !== 0 ? weightPermutations[0] : data.permutatedWeights[0]
+  const settings: AlgorithmSettings = {
+    algorithmId: data.algorithmId,
     name: data.name,
-    evolutionNumber: data.evolutionNumber + 1,
-    permutatedWeights: undefined,
-    evolutionId: db.createId(),
-    gamesPlayed: [],
-    active: true,
-    overallAvgFitness: overallAvgFitness,
-    bestFitness: _.maxBy(bestPerformingGames, 'fitness').fitness,
-    evolutionFitness: evolutionFitness,
-    algorithmId: data.algorithmId
+    weights: weightPermutation.weights,
+    weightsId: weightPermutation.id,
   }
 
-  cacheCalculatedWeights(next.algorithmId, permutations)
-
-  console.dir(['next evolution', next], { depth: undefined, colors: true })
-  return await db.saveEvolution(next, data.evolutionId)
+  return settings
 }
 
-const getCalculatedWeights = (algorithmId, evolutionNumber, weights) => {
-  if (preCalculatedWeights[algorithmId]) {
-    let newPointerValue = ++preCalculatedWeightsPointer[algorithmId]
-    if (newPointerValue >= preCalculatedWeights[algorithmId].length) {
-      newPointerValue = 0
-      preCalculatedWeightsPointer[algorithmId] = 0
+export const reduceActiveWeights = (algorithm: Algorithm, reduceBy: number): string[] => {
+  const gamesPlayed = algorithm.permutatedWeights.filter(x => x.active)
+  let game
+  let index = 0
+  const weightsIds = []
+  const sortedGames = _.sortBy(gamesPlayed, x => x.totalFitness / x.gamesPlayed)
+  while (reduceBy > index && sortedGames.filter(x => x.active).length > 0) {
+    game = sortedGames[index]
+    if (game.active) {
+      weightsIds.push(game.id)
+      game.active = false
+      index++
     }
-
-    return preCalculatedWeights[algorithmId][newPointerValue]
   }
 
-  const permutations = preCalculateWeights(evolutionNumber, weights)
-  cacheCalculatedWeights(algorithmId, permutations)
-  return permutations[0]
+  algorithm.activePermutations = _.filter(algorithm.permutatedWeights, x => x.active).length
+
+  return weightsIds
+}
+
+export const calculateMinimumGamesPlayedToReduce = (algorithm: Algorithm): number => {
+  const totalPermutations = algorithm.permutatedWeights.length
+  if (totalPermutations === algorithm.activePermutations) {
+    return settings.minGamesToEvaluate
+  }
+
+  let shifts = 0
+  let temp = totalPermutations
+  while (temp >= algorithm.activePermutations) {
+    temp = Math.floor(temp / 2)
+    shifts++
+  }
+
+  return (settings.minGamesToEvaluate / 2) * (shifts + 1)
+}
+
+export const numberOfReducableAlgoritms = (algorithm: Algorithm): number => {
+  const minGamesPlayed = calculateMinimumGamesPlayedToReduce(algorithm)
+  const activeAlgorithms = algorithm.permutatedWeights.filter(x => x.active)
+  if (!_.every(activeAlgorithms, x => x.gamesPlayed >= minGamesPlayed)) {
+    return 0
+  }
+
+  return Math.floor(algorithm.activePermutations / 2)
+}
+
+export const evolve = async (algorithmId: string) => {
+  const algorithm = await db.getCurrentEvolution(algorithmId)
+  const totalGamesPlayed = _.sumBy(algorithm.permutatedWeights, x => x.gamesPlayed)
+  const totalFitness = _.sumBy(algorithm.permutatedWeights, x => x.totalFitness)
+  const overallAvgFitness = totalFitness / totalGamesPlayed
+
+  const permutation = algorithm.permutatedWeights.filter(x => x.active)[0]
+  const {weights, gameResults, gamesPlayed} = permutation
+
+  const permutations = preCalculateWeights(algorithm.evolutionNumber + 1, weights)
+  const weightPermutations: WeightPermutation[] = permutations.map(weights => {
+    return {
+      active: true,
+      gameResults: [],
+      gamesPlayed: 0,
+      id: db.createId(),
+      totalFitness: 0,
+      weights: weights,
+      weightsId: db.createId(),
+    }
+  })
+
+  const next: Algorithm = {
+    active: true,
+    activePermutations: weightPermutations.length,
+    algorithmId: algorithm.algorithmId,
+    bestFitness: _.maxBy(gameResults, 'fitness').fitness,
+    evolutionFitness: permutation.totalFitness / permutation.gamesPlayed,
+    evolutionId: db.createId(),
+    evolutionNumber: algorithm.evolutionNumber + 1,
+    name: algorithm.name,
+    overallAvgFitness: overallAvgFitness,
+    permutatedWeights: weightPermutations,
+    weights: weights,
+  }
+
+  console.dir(['next evolution', _.omit(next, ['permutatedWeights'])], { depth: undefined, colors: true })
+  return await db.saveNewEvolution(next, algorithm.evolutionId)
 }
 
 export const randomDiff = (evolutionNumber: number): number => {
@@ -153,25 +164,39 @@ export const preCalculateWeights = (evolutionNumber: number, weights: Weights): 
   return combinations.generateCombinations(weights, diff)
 }
 
-export const cacheCalculatedWeights = (algorithmId: string, permutations: Weights[]) => {
-  preCalculatedWeights[algorithmId] = permutations
-  preCalculatedWeightsPointer[algorithmId] = 0
-}
-
 const runEvolution = async () => {
   try {
     const evolutions = await db.getEvolutions()
 
     _.each(evolutions, async (evolution) => {
       const currentEvolution = await db.getCurrentEvolution(evolution.algorithmId)
-        console.log('Progress for ' + currentEvolution.name + ' ' + currentEvolution.gamesPlayed.length + '/' + settings.minGamesToEvaluate)
-        if (preCalculatedWeights[currentEvolution.algorithmId] && currentEvolution.gamesPlayed.length > preCalculatedWeights[currentEvolution.algorithmId].length) {
-          const bestEvolutions = await getBestEvaluations(evolution.algorithmId)
 
-            console.log(bestEvolutions)
-            console.log('Evolution!!')
-        }
+      if (currentEvolution.activePermutations === 1) {
+        console.log('Evolve')
+        const bestEvolutions = await evolve(currentEvolution.algorithmId)
+        console.log('Evolution!!')
+        return
+      }
+
+      const minGamesPlayed = calculateMinimumGamesPlayedToReduce(currentEvolution)
+      const activePermutations = currentEvolution.permutatedWeights.filter(x => x.active)
+      console.log(['active', activePermutations.length, 'left', currentEvolution.permutatedWeights.filter(x => x.active && x.gamesPlayed < minGamesPlayed).length])
+      const reduceBy = numberOfReducableAlgoritms(currentEvolution)
+      console.log(['reduceBy', reduceBy, 'currentActive', currentEvolution.activePermutations, 'minGamesPlayed', minGamesPlayed])
+      if (!reduceBy) {
+        return
+      }
+
+      console.log ('reducing')
+      const ids = reduceActiveWeights(currentEvolution, reduceBy)
+
+      console.log ('save')
+      ids.forEach(async (id, i) => {
+        console.log (`save ${i}`)
+        await db.deactivateWeights(currentEvolution.algorithmId, [id])
       })
+      console.log ('done')
+    })
   } catch (error) {
     console.error(error)
   }

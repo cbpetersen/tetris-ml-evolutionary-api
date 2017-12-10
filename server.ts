@@ -1,10 +1,12 @@
 import * as _ from 'lodash'
-import * as bodyParser  from 'body-parser'
-import * as cors  from 'cors'
+import * as bodyParser from 'body-parser'
+import * as cors from 'cors'
 import * as db from './src/db'
 import * as express from 'express'
 import * as learning from './src/learning'
 import * as path from 'path'
+
+import { Weights } from './src/types'
 
 const app = express()
 require('http').createServer(app).listen(3000)
@@ -23,7 +25,7 @@ const asyncMiddleware = fn =>
 app.use(cors())
 app.use(bodyParser.json())
 app.use('/public', express.static('public'))
-app.use(require('morgan')('dev'))
+// app.use(require('morgan')('dev'))
 
 const endpoints = (server) => {
   server.get('/', (req, res) => {
@@ -58,24 +60,35 @@ const endpoints = (server) => {
     res.json(data)
   })
 
-  server.get('/evolutions/:id/best', async (req, res) => {
-    const data  = await learning.getBestEvaluations(req.params.id)
-    res.json(data)
-  })
+  // server.get('/evolutions/:id/best', async (req, res) => {
+  //   const data  = await learning.getBestEvaluations(req.params.id)
+  //   res.json(data)
+  // })
 
   const saveResultsInBulks = (() => {
-    let buffer = []
+    let buffer = {}
     let size = 0
+
+    const emptyBuffer = (id, buffer) => {
+      const keys = Object.keys(buffer)
+      _.forEach(keys, x => {
+        const saveData = db.saveMultipleGameStatuses(id, x, buffer[x])
+      })
+    }
+
     return async (id, gameData) => {
       delete gameData.name
 
-      buffer.push(gameData)
+      if (!buffer[gameData.weightsId]) {
+        buffer[gameData.weightsId] = []
+      }
+
+      buffer[gameData.weightsId].push(gameData)
       size++
 
-      if (size % 50 === 0) {
-        const saveData = await db.saveMultipleGameStatuses(id, buffer)
-
-        buffer = []
+      if (size % 1 === 0) {
+        emptyBuffer(id, buffer)
+        buffer = {}
         size = 0
       }
     }

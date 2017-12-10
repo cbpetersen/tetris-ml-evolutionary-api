@@ -2,7 +2,6 @@ import * as perm from '../combinations'
 
 import { Weights } from '../types'
 
-// const learning = require('../learning')
 describe('preCalculateWeights', () => {
   const weights: Weights = {
     propOne: 0,
