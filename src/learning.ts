@@ -13,8 +13,7 @@ import {
   WeightPermutation,
   Weights,
 } from './types'
-
-import { getEvolutions } from './db'
+import { getEvolutions, newAlgorithm } from './db'
 
 const settings: Settings = require('./settings.json')
 
@@ -36,9 +35,7 @@ export const createNewAlgorithm = async (data: GetAlgorithm) => {
     permutations: weightPermutations
   }
 
-  const newE = await db.newAlgorithm(algorithm)
-  // cacheCalculatedWeights(newE)
-  return newE
+  return await db.newAlgorithm(algorithm)
 }
 
 export const getOrCreateAlgorithm = async (data: GetAlgorithm) => {
@@ -79,12 +76,9 @@ export const reduceActiveWeights = (algorithm: Algorithm, reduceBy: number): str
     game = sortedGames[index]
     if (game.active) {
       weightsIds.push(game.id)
-      game.active = false
       index++
     }
   }
-
-  algorithm.activePermutations = _.filter(algorithm.permutatedWeights, x => x.active).length
 
   return weightsIds
 }
@@ -115,8 +109,7 @@ export const numberOfReducableAlgoritms = (algorithm: Algorithm): number => {
   return Math.floor(algorithm.activePermutations / 2)
 }
 
-export const evolve = async (algorithmId: string) => {
-  const algorithm = await db.getCurrentEvolution(algorithmId)
+export const evolve = async (algorithm: Algorithm) => {
   const totalGamesPlayed = _.sumBy(algorithm.permutatedWeights, x => x.gamesPlayed)
   const totalFitness = _.sumBy(algorithm.permutatedWeights, x => x.totalFitness)
   const overallAvgFitness = totalFitness / totalGamesPlayed
@@ -152,7 +145,7 @@ export const evolve = async (algorithmId: string) => {
   }
 
   console.dir(['next evolution', _.omit(next, ['permutatedWeights'])], { depth: undefined, colors: true })
-  return await db.saveNewEvolution(next, algorithm.evolutionId)
+  return next
 }
 
 export const randomDiff = (evolutionNumber: number): number => {
@@ -173,7 +166,8 @@ const runEvolution = async () => {
 
       if (currentEvolution.activePermutations === 1) {
         console.log('Evolve')
-        const bestEvolutions = await evolve(currentEvolution.algorithmId)
+        const newEvolution = await evolve(currentEvolution)
+        await db.saveNewEvolution(newEvolution, currentEvolution.evolutionId)
         console.log('Evolution!!')
         return
       }
