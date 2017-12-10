@@ -18,9 +18,10 @@
   "files": [
     "./node_modules/typescript/lib/lib.es6.d.ts",
     "./node_modules/@types/node/index.d.ts",
-    "./src/types.d.ts"
+    "./src/types.ts"
   ],
   "include": [
+    "src/settings.json",
     "src/**/*.ts",
     "server.ts"
   ]
