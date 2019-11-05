@@ -29,9 +29,9 @@
     "@types/express-serve-static-core" "*"
     "@types/serve-static" "*"
 
-"@types/jest@21.1.6":
-  version "21.1.6"
-  resolved "https://registry.yarnpkg.com/@types/jest/-/jest-21.1.6.tgz#9467945ce33261e4fdd14276576951aa130515aa"
+"@types/jest@21.1.10":
+  version "21.1.10"
+  resolved "https://registry.yarnpkg.com/@types/jest/-/jest-21.1.10.tgz#dcacb5217ddf997a090cc822bba219b4b2fd7984"
 
 "@types/lodash@4.14.85":
   version "4.14.85"
