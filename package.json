@@ -45,7 +45,7 @@
     "express": "4.13.4",
     "lodash": "4.17.15",
     "mongoist": "1.7.4",
-    "mongojs": "2.4.1",
+    "mongojs": "2.6.0",
     "morgan": "1.9.1",
     "tingodb": "0.5.1"
   },
