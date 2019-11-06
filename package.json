@@ -26,7 +26,7 @@
   ],
   "devDependencies": {
     "@types/jest": "21.1.10",
-    "concurrently": "3.5.0",
+    "concurrently": "3.6.1",
     "jest": "21.2.1",
     "nodemon": "1.12.1",
     "standard": "9.0.2",
