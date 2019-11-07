@@ -30,7 +30,7 @@
     "jest": "21.2.1",
     "nodemon": "1.19.4",
     "standard": "9.0.2",
-    "ts-jest": "21.2.3",
+    "ts-jest": "21.2.4",
     "tslint": "5.8.0",
     "typescript": "2.6.1"
   },
