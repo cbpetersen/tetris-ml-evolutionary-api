@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "target": "es5",
+    "target": "es6",
     "noImplicitAny": false,
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
@@ -17,8 +17,12 @@
   },
   "files": [
     "./node_modules/typescript/lib/lib.es6.d.ts",
-    "./node_modules/@types/node/index.d.ts",
+    // "./node_modules/@types/node/index.d.ts",
     "./src/types.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*.spec.ts"
   ],
   "include": [
     "src/settings.json",
