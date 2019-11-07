@@ -1,17 +1,17 @@
 FROM mhart/alpine-node:latest
 
-# Create app directory
-RUN mkdir -p /usr/src/app
-WORKDIR /usr/src/app
 RUN npm i -g yarn
 
 # Install app dependencies
-COPY package.json /usr/src/app/
-COPY yarn.lock /usr/src/app/
-RUN yarn install
+RUN mkdir -p /app
+WORKDIR /app
+
+COPY ./package.json /app/
+COPY ./yarn.lock /app/
+RUN yarn install --frozen-lockfile
 # Bundle app source
 
-COPY . /usr/src/app
+COPY . /app
 
 RUN npm run build
 
