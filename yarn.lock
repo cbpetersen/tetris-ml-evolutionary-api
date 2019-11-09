@@ -1233,7 +1233,7 @@ debug@2.6.9, debug@^2.2.0, debug@^2.3.3, debug@^2.6.8, debug@^2.6.9:
   dependencies:
     ms "2.0.0"
 
-debug@^3.1.0, debug@^3.2.6:
+debug@^3.2.6:
   version "3.2.6"
   resolved "https://registry.yarnpkg.com/debug/-/debug-3.2.6.tgz#e83d17de16d8a7efb7717edbe5fb10135eee629b"
   integrity sha512-mel+jf7nrtEl5Pn1Qx46zARXKDpBbvzezse7p7LqINmdoIk8PYP5SySaxEmYv6TZ0JyEKA1hsCId6DIhgITtWQ==
@@ -3473,7 +3473,7 @@ mkdirp@0.x, mkdirp@^0.5.0, mkdirp@^0.5.1:
   dependencies:
     minimist "0.0.8"
 
-mongodb@^3.0.10, mongodb@^3.3.2:
+mongodb@^3.1.10, mongodb@^3.3.2:
   version "3.3.3"
   resolved "https://registry.yarnpkg.com/mongodb/-/mongodb-3.3.3.tgz#509cad2225a1c56c65a331ed73a0d5d4ed5cbe67"
   integrity sha512-MdRnoOjstmnrKJsK8PY0PjP6fyF/SBS4R8coxmhsfEU7tQ46/J6j+aSHF2n4c2/H8B+Hc/Klbfp8vggZfI0mmA==
@@ -3484,13 +3484,13 @@ mongodb@^3.0.10, mongodb@^3.3.2:
   optionalDependencies:
     saslprep "^1.0.0"
 
-mongoist@1.7.4:
-  version "1.7.4"
-  resolved "https://registry.yarnpkg.com/mongoist/-/mongoist-1.7.4.tgz#57f34a8596c61d0877cfd4dede18290ba01e9cf3"
-  integrity sha512-H1h/YRLLvqWFWvMhfLEju+rtH5imxlKlbee8jfzLW5BtZyz+7xICJI68ZBbYxUvUpocYtrmYdRb38pot3s4QZQ==
+mongoist@2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/mongoist/-/mongoist-2.0.0.tgz#de0f8ef3a1f25ed5ad3246fdc2d4c5085de80b50"
+  integrity sha512-X6AE5txsRxfnpMgyUOSf3Bsoe2K0SgkLTPHFnG8KCJXt54NKsBErdHU2/Fi95x3Chm1VTQq1Abf6a5UowjOfWw==
   dependencies:
-    debug "^3.1.0"
-    mongodb "^3.0.10"
+    debug "^4.1.0"
+    mongodb "^3.1.10"
 
 mongojs@3.1.0:
   version "3.1.0"
