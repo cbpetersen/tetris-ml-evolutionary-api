@@ -25,7 +25,7 @@
     "awesome"
   ],
   "devDependencies": {
-    "@types/jest": "24.0.24",
+    "@types/jest": "24.0.25",
     "@types/node": "12.12.22",
     "concurrently": "5.0.2",
     "jest": "24.9.0",
