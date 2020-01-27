@@ -27,7 +27,7 @@
   "devDependencies": {
     "@types/jest": "24.9.1",
     "@types/node": "12.12.25",
-    "concurrently": "5.0.2",
+    "concurrently": "5.1.0",
     "jest": "25.1.0",
     "nodemon": "2.0.2",
     "standard": "14.3.1",
