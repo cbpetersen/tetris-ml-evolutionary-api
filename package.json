@@ -30,7 +30,7 @@
     "concurrently": "5.1.0",
     "jest": "25.1.0",
     "nodemon": "2.0.2",
-    "standard": "14.3.1",
+    "standard": "14.3.3",
     "ts-jest": "25.2.1",
     "tslint": "5.20.1",
     "typescript": "3.8.3"
