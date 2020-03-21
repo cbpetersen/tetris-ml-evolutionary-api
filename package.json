@@ -27,6 +27,11 @@
   "devDependencies": {
     "@types/jest": "25.1.4",
     "@types/node": "12.12.30",
+    "@types/body-parser": "1.19.0",
+    "@types/cors": "2.8.6",
+    "@types/express": "4.17.1",
+    "@types/lodash": "4.14.149",
+    "@types/morgan": "1.9.0",
     "concurrently": "5.1.0",
     "jest": "25.1.0",
     "nodemon": "2.0.2",
@@ -36,11 +41,6 @@
     "typescript": "3.8.3"
   },
   "dependencies": {
-    "@types/body-parser": "1.19.0",
-    "@types/cors": "2.8.6",
-    "@types/express": "4.17.3",
-    "@types/lodash": "4.14.149",
-    "@types/morgan": "1.9.0",
     "body-parser": "1.19.0",
     "cors": "2.8.5",
     "express": "4.17.1",
