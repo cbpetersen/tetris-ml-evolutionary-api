@@ -47,7 +47,7 @@
     "lodash": "4.17.15",
     "mongoist": "2.5.1",
     "mongojs": "3.1.0",
-    "morgan": "1.9.1",
+    "morgan": "1.10.0",
     "tingodb": "0.6.1"
   },
   "jest": {
