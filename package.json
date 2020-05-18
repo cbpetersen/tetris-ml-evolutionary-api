@@ -25,7 +25,7 @@
     "awesome"
   ],
   "devDependencies": {
-    "@types/jest": "25.1.4",
+    "@types/jest": "25.2.3",
     "@types/node": "12.12.30",
     "@types/body-parser": "1.19.0",
     "@types/cors": "2.8.6",
