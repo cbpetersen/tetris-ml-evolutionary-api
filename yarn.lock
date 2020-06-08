@@ -3742,10 +3742,10 @@ mongodb@^3.3.2:
   optionalDependencies:
     saslprep "^1.0.0"
 
-mongoist@2.5.1:
-  version "2.5.1"
-  resolved "https://registry.yarnpkg.com/mongoist/-/mongoist-2.5.1.tgz#82b863c227b31ddc4cec559ef8cf99001c80231b"
-  integrity sha512-ZV9ZBN3tTjiKg+6Hupgi5SkodbsaTrVOF9JUMkrbXyY/xLacHeA2VP3YI0pWdOiIjNBJAXckWX69T9dbdwEzzQ==
+mongoist@2.5.2:
+  version "2.5.2"
+  resolved "https://registry.yarnpkg.com/mongoist/-/mongoist-2.5.2.tgz#b42f9f8220acea47370eeb95d2dfb58133ac6cf4"
+  integrity sha512-9npemLFh4L9yVh5boo0+/1lzCAEwScN//CIIuWGrxuw7AceAgF36FFLBZb9/wEzOYks2OmtQqSzXBzKU9zZ8Ag==
   dependencies:
     debug "^4.1.1"
     mongodb "^3.3.2"
