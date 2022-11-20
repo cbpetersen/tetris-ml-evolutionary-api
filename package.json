@@ -25,7 +25,7 @@
     "awesome"
   ],
   "devDependencies": {
-    "@types/jest": "26.0.14",
+    "@types/jest": "26.0.24",
     "@types/node": "12.12.67",
     "@types/body-parser": "1.19.0",
     "@types/cors": "2.8.8",
@@ -33,7 +33,7 @@
     "@types/lodash": "4.14.162",
     "@types/morgan": "1.9.1",
     "concurrently": "5.3.0",
-    "jest": "26.5.3",
+    "jest": "26.6.3",
     "nodemon": "2.0.4",
     "standard": "14.3.4",
     "ts-jest": "26.4.1",
