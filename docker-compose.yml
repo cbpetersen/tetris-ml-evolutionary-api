@@ -1,12 +1,14 @@
-version: "3.2"
+version: "3.8"
 
 services:
 
   mongodb:
     image: mongo:7.0
+    volumes:
+      - ./data:/data/db
     ports:
       - "27017:27017"
-    restart: always
+    restart: on-failure:100
 
   api:
     build: .

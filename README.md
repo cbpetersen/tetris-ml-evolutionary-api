@@ -1,7 +1,8 @@
 # Tetris Machine learning Api
 
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)
-[![Build Status](https://travis-ci.org/cbpetersen/tetris-ml-evolutionary-api.svg?branch=master)](https://travis-ci.org/cbpetersen/tetris-ml-evolutionary-api)
+[![Bun build](https://github.com/cbpetersen/tetris-ml-evolutionary-api/actions/workflows/build.yml/badge.svg)](https://github.com/cbpetersen/tetris-ml-evolutionary-api/actions/workflows/build.yml)
+
 
 
 ## Machine learning api for distributed gamee agents
