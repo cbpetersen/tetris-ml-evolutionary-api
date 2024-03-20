@@ -3,18 +3,20 @@ version: "3.2"
 services:
 
   mongodb:
-    image: mongo:4.4
+    image: mongo:7.0
     ports:
       - "27017:27017"
     restart: always
 
   api:
     build: .
-    command: npm run watch-debug
+    entrypoint: bun watch-debug
     working_dir: /app
     volumes:
       - "./src:/app/src"
-      # - ./data:/tetris-api/db
+      - "./package.json:/app/package.json"
+      - "./server.ts:/app/server.ts"
+      - "./bun.lockb:/app/bun.lockb"
     ports:
       - "3000:3000"
     links:

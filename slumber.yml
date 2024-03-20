@@ -1,0 +1,36 @@
+profiles:
+  local:
+    data:
+      host: http://localhost:3000
+
+chains:
+  evolution_id:
+    source: !request evolutions
+    selector: $[0].algorithmId
+
+
+requests:
+  create_evolutions:
+    method: POST
+    url: "{{host}}/evolutions"
+    headers:
+      accept: application/json
+      content-type: application/json
+    body: >
+      {"weights": {"power": "1}, "name": "Jimmy"}
+
+  evolutions_current:
+    method: GET
+    url: "{{host}}/evolutions/{{chains.evolution_id}}/current"
+
+  list_fish:
+    method: GET
+    url: "{{host}}/crossdomain.xml"
+
+  evolutions:
+    method: GET
+    url: "{{host}}/evolutions"
+
+  evolutions_settings:
+    method: GET
+    url: "{{host}}/evolutions/{{chains.evolution_id}}/settings"

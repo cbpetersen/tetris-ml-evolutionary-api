@@ -1,17 +1,10 @@
-import {} from 'jest'
-
 import * as _ from 'lodash'
 
 import { Algorithm, GameResult, NewAlgorithm, WeightPermutation, Weights } from '../types'
+import { Learning } from '../learning'
 
-import { newAlgorithm } from '../db'
-
-jest.mock('../settings.json', () => ({
-  newWeigtRandomDifference: 22,
-  minGamesToEvaluate: 20
-}), { virtual: true })
-
-const learning = require('../learning')
+import * as settings from '../settings.json'
+const learning = new Learning({...settings, newWeigtRandomDifference: 22, minGamesToEvaluate: 20})
 
 describe('preCalculateWeights', () => {
   const weights: Weights = {

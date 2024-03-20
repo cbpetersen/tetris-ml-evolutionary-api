@@ -5,6 +5,7 @@
     "noImplicitAny": false,
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
+    "resolveJsonModule": true,
     "sourceMap": true,
     "outDir": "dist",
     "baseUrl": ".",
@@ -27,6 +28,6 @@
   "include": [
     "src/settings.json",
     "src/**/*.ts",
-    "server.ts"
+    "src/server.ts"
   ]
 }
