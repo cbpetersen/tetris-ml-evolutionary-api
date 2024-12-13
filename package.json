@@ -33,7 +33,7 @@
     "@types/morgan": "1.9.9",
     "concurrently": "8.2.2",
     "jest": "29.7.0",
-    "nodemon": "3.1.7",
+    "nodemon": "3.1.9",
     "standard": "17.1.2",
     "ts-jest": "29.2.5",
     "tslint": "6.1.3",
