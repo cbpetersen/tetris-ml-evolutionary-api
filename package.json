@@ -28,7 +28,7 @@
     "@types/jest": "29.5.14",
     "@types/node": "20.17.32",
     "@types/body-parser": "1.19.5",
-    "@types/cors": "2.8.17",
+    "@types/cors": "2.8.18",
     "@types/lodash": "4.17.16",
     "@types/morgan": "1.9.9",
     "concurrently": "8.2.2",
