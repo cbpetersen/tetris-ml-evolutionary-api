@@ -27,7 +27,7 @@
   "devDependencies": {
     "@types/jest": "29.5.14",
     "@types/node": "20.19.43",
-    "@types/body-parser": "1.19.6",
+    "@types/body-parser": "2.2.0",
     "@types/cors": "2.8.19",
     "@types/lodash": "4.17.25",
     "@types/morgan": "1.9.10",
@@ -40,7 +40,7 @@
     "typescript": "5.9.3"
   },
   "dependencies": {
-    "body-parser": "1.20.8",
+    "body-parser": "2.4.0",
     "cors": "2.8.6",
     "express": "4.22.3",
     "lodash": "4.18.1",
